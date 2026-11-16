@@ -1,0 +1,39 @@
+
+body {
+    text-align: center;
+    background-color: #222;
+    color: white;
+    font-family: Arial;
+}
+
+h1 {
+    color: lime;
+}
+
+h3 {
+    color: white;
+}
+
+canvas {
+    background-color: black;
+    border: 3px solid lime;
+}
+
+p {
+    color: white;
+    font-size: 16px;
+}
+
+button {
+    padding: 10px 20px;
+    background-color: lime;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+button:hover {
+    background-color: green;
+    color: white;
+}
