@@ -7,9 +7,10 @@ const box = 20;
 let snake;
 let food;
 let direction;
+let nextDirection;
 let score;
 let game;
-let gameOver;
+let gameOver = false;
 
 function restartGame() {
     clearInterval(game);
@@ -23,6 +24,7 @@ function restartGame() {
     ];
 
     direction = "RIGHT";
+    nextDirection = "RIGHT";
     score = 0;
     gameOver = false;
 
@@ -34,63 +36,80 @@ function restartGame() {
     game = setInterval(moveSnake, 150);
 }
 
+// Food generation
 function createFood() {
-    food = {
-        x: Math.floor(Math.random() * 20) * box,
-        y: Math.floor(Math.random() * 20) * box
-    };
-
-    for (let part of snake) {
-        if (part.x === food.x && part.y === food.y) {
-            createFood();
-            return;
-        }
-    }
+    do {
+        food = {
+            x: Math.floor(Math.random() * 20) * box,
+            y: Math.floor(Math.random() * 20) * box
+        };
+    } while (
+        snake.some(part =>
+            part.x === food.x && part.y === food.y
+        )
+    );
 }
 
+// Keyboard controls
 document.addEventListener("keydown", function(event) {
-    const key = event.key;
 
-    if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(key)) {
+    const key = event.key.toLowerCase();
+
+    if ([
+        "arrowup", "arrowdown",
+        "arrowleft", "arrowright",
+        "w", "a", "s", "d"
+    ].includes(key)) {
         event.preventDefault();
     }
 
-    if (key === "ArrowUp" && direction !== "DOWN") {
-        direction = "UP";
+    if ((key === "arrowup" || key === "w") &&
+        direction !== "DOWN") {
+        nextDirection = "UP";
     }
-    else if (key === "ArrowDown" && direction !== "UP") {
-        direction = "DOWN";
+
+    else if ((key === "arrowdown" || key === "s") &&
+        direction !== "UP") {
+        nextDirection = "DOWN";
     }
-    else if (key === "ArrowLeft" && direction !== "RIGHT") {
-        direction = "LEFT";
+
+    else if ((key === "arrowleft" || key === "a") &&
+        direction !== "RIGHT") {
+        nextDirection = "LEFT";
     }
-    else if (key === "ArrowRight" && direction !== "LEFT") {
-        direction = "RIGHT";
+
+    else if ((key === "arrowright" || key === "d") &&
+        direction !== "LEFT") {
+        nextDirection = "RIGHT";
     }
 });
 
+// Draw game
 function drawGame() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     // Draw food
     ctx.fillStyle = "red";
-    ctx.fillRect(food.x, food.y, box, box);
+    ctx.fillRect(food.x, food.y, box - 2, box - 2);
 
-    // Draw snake
-    for (let i = 0; i < snake.length; i++) {
-        ctx.fillStyle = i === 0 ? "lime" : "green";
+    // Draw snake body
+    snake.forEach((part, index) => {
+        ctx.fillStyle = index === 0 ? "lime" : "green";
 
         ctx.fillRect(
-            snake[i].x,
-            snake[i].y,
+            part.x,
+            part.y,
             box - 2,
             box - 2
         );
-    }
+    });
 }
 
+// Move snake
 function moveSnake() {
     if (gameOver) return;
+
+    direction = nextDirection;
 
     let headX = snake[0].x;
     let headY = snake[0].y;
@@ -100,12 +119,9 @@ function moveSnake() {
     if (direction === "LEFT") headX -= box;
     if (direction === "RIGHT") headX += box;
 
-    let newHead = { x: headX, y: headY };
-
-    // Check wall collision
+    // Wall collision
     if (
-        headX < 0 ||
-        headY < 0 ||
+        headX < 0 || headY < 0 ||
         headX >= canvas.width ||
         headY >= canvas.height
     ) {
@@ -113,19 +129,19 @@ function moveSnake() {
         return;
     }
 
-    let ateFood = headX === food.x && headY === food.y;
+    const ateFood = headX === food.x && headY === food.y;
 
-    // Check collision with snake body
-    let body = ateFood ? snake : snake.slice(0, -1);
+    // Body collision
+    const body = ateFood ? snake : snake.slice(0, -1);
 
-    for (let part of body) {
-        if (headX === part.x && headY === part.y) {
-            endGame();
-            return;
-        }
+    if (body.some(part =>
+        part.x === headX && part.y === headY
+    )) {
+        endGame();
+        return;
     }
 
-    snake.unshift(newHead);
+    snake.unshift({ x: headX, y: headY });
 
     if (ateFood) {
         score += 10;
@@ -138,6 +154,7 @@ function moveSnake() {
     drawGame();
 }
 
+// Game over
 function endGame() {
     clearInterval(game);
     gameOver = true;
